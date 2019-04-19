@@ -7,6 +7,8 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
+#include <unistd.h>
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -23,6 +25,7 @@
 #include "soc/rtc_cntl_reg.h"
 #include "soc/sens_reg.h"
 #include "soc/rtc.h"
+#include "esp_timer.h"
 
 static RTC_DATA_ATTR struct timeval sleep_enter_time;
 
@@ -132,6 +135,8 @@ void app_main()
 #endif // CONFIG_ENABLE_ULP_TEMPERATURE_WAKEUP
 
     vTaskDelay(1000 / portTICK_PERIOD_MS);
+    printf("aspetto un po \n");
+    usleep(15000000);
 
     const int wakeup_time_sec = 20;
     printf("Enabling timer wakeup, %ds\n", wakeup_time_sec);

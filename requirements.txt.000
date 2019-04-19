@@ -1,4 +1,5 @@
 setuptools
 pyserial
 future
+cryptography
 pyparsing

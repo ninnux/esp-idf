@@ -56,6 +56,8 @@ if __name__ == "__main__":
         for line in f:
             line = line.strip()
             try:
+		print "---"+line+"---"
+		print(pkg_resources.require(line))
                 pkg_resources.require(line)
             except Exception:
                 not_satisfied.append(line)
