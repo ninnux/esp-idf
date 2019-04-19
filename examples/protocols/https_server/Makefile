@@ -4,6 +4,5 @@
 #
 
 PROJECT_NAME := https_server
-
 include $(IDF_PATH)/make/project.mk
 

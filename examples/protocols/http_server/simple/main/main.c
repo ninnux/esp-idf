@@ -29,6 +29,32 @@
 
 static const char *TAG="APP";
 
+void mybasic_auth(httpd_req_t *req){
+
+    char*  buf;
+    size_t buf_len;
+    buf_len = httpd_req_get_hdr_value_len(req, "Authorization") + 1;
+    if (buf_len > 1) {
+        buf = malloc(buf_len);
+        if (httpd_req_get_hdr_value_str(req, "Authorization", buf, buf_len) == ESP_OK) {
+            ESP_LOGI(TAG, "Found header => Authorization: %s", buf);
+ 	    if(!strcmp(buf,"Basic bmlubzpwaXBwb3BpcHBv")){
+    	    	httpd_resp_set_status(req, "200 Ok");
+	    }else{
+       		httpd_resp_set_status(req, "403 Forbidden");
+	    }	
+        }
+        free(buf);
+    }else{
+       httpd_resp_set_hdr(req, "WWW-Authenticate", "Basic realm=pippo");
+       ESP_LOGI(TAG, "WWW-Authoicate:%s","culo");
+       httpd_resp_set_status(req, "401 Unauthorized");
+       ESP_LOGI(TAG, "401:%s","culo");
+    }
+}
+
+
+
 /* An HTTP GET handler */
 esp_err_t hello_get_handler(httpd_req_t *req)
 {
@@ -64,6 +90,28 @@ esp_err_t hello_get_handler(httpd_req_t *req)
         }
         free(buf);
     }
+    mybasic_auth(req);
+    // BASIC AUTH
+    //buf_len = httpd_req_get_hdr_value_len(req, "Authorization") + 1;
+    //if (buf_len > 1) {
+    //    buf = malloc(buf_len);
+    //    if (httpd_req_get_hdr_value_str(req, "Authorization", buf, buf_len) == ESP_OK) {
+    //        ESP_LOGI(TAG, "Found header => Authorization: %s", buf);
+    //        if(!strcmp(buf,"Basic bmlubzpwaXBwb3BpcHBv")){
+    //	    	httpd_resp_set_status(req, "200 Ok");
+    //        }else{
+    //   		httpd_resp_set_status(req, "403 Forbidden");
+    //        }	
+    //    }
+    //    free(buf);
+    //}else{
+    //   httpd_resp_set_hdr(req, "WWW-Authenticate", "Basic realm=pippo");
+    //   ESP_LOGI(TAG, "WWW-Authoicate:%s","culo");
+    //   httpd_resp_set_status(req, "401 Unauthorized");
+    //   ESP_LOGI(TAG, "401:%s","culo");
+    //}
+
+    // FINE BASIC AUTH
 
     /* Read URL query string length and allocate memory for length + 1,
      * extra byte for null termination */
@@ -90,6 +138,8 @@ esp_err_t hello_get_handler(httpd_req_t *req)
     /* Set some custom headers */
     httpd_resp_set_hdr(req, "Custom-Header-1", "Custom-Value-1");
     httpd_resp_set_hdr(req, "Custom-Header-2", "Custom-Value-2");
+
+
 
     /* Send response with custom headers and body set as the
      * string passed in user context*/

@@ -69,3 +69,6 @@
 [submodule "examples/build_system/cmake/import_lib/main/lib/tinyxml2"]
 	path = examples/build_system/cmake/import_lib/main/lib/tinyxml2
 	url = https://github.com/leethomason/tinyxml2
+[submodule "examples/protocols/https_server/components/esp32_web_basic_auth"]
+	path = examples/protocols/https_server/components/esp32_web_basic_auth
+	url = https://github.com/ninnux/esp32_web_basic_auth.git
