@@ -19,6 +19,8 @@
 
 #include <esp_https_server.h>
 
+#include "esp32_web_basic_auth.h"
+
 /* A simple example that demonstrates how to create GET and POST
  * handlers and start an HTTPS server.
 */
@@ -29,8 +31,14 @@ static const char *TAG = "example";
 /* An HTTP GET handler */
 static esp_err_t root_get_handler(httpd_req_t *req)
 {
+if(!esp32_web_basic_auth(req)){
     httpd_resp_set_type(req, "text/html");
     httpd_resp_send(req, "<h1>Hello Secure World!</h1>", -1); // -1 = use strlen()
+}else{
+    httpd_resp_set_type(req, "text/html");
+    httpd_resp_send(req, "<h1>Culo!</h1>", -1); // -1 = use strlen()
+}
+
 
     return ESP_OK;
 }
