@@ -65,3 +65,6 @@
 [submodule "components/esp_wifi/lib_esp32"]
 	path = components/esp_wifi/lib_esp32
 	url = https://github.com/espressif/esp32-wifi-lib.git
+[submodule "examples/wifi/iperf/components/ninux_esp32_ota"]
+	path = examples/wifi/iperf/components/ninux_esp32_ota
+	url = https://github.com/ninnux/ninux_esp32_ota.git

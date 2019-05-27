@@ -49,7 +49,8 @@ static wifi_args_t ap_args;
 static bool reconnect = true;
 static const char *TAG="cmd_wifi";
 
-static EventGroupHandle_t wifi_event_group;
+EventGroupHandle_t wifi_event_group;
+//static EventGroupHandle_t wifi_event_group;
 const int CONNECTED_BIT = BIT0;
 const int DISCONNECTED_BIT = BIT1;
 

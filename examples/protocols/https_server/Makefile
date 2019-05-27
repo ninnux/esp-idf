@@ -4,6 +4,7 @@
 #
 
 PROJECT_NAME := https_server
+PROJECT_VER = "culo"
 
 EXTRA_COMPONENT_DIRS = $(IDF_PATH)/examples/common_components/protocol_examples_common
 

@@ -4,7 +4,7 @@
 #
 
 PROJECT_NAME := iperf
-
+PROJECT_VER = "0.1"
 EXTRA_COMPONENT_DIRS := $(IDF_PATH)/examples/system/console/components
 
 include $(IDF_PATH)/make/project.mk
