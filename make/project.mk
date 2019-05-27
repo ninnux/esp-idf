@@ -488,9 +488,28 @@ export COMPILER_VERSION_STR COMPILER_VERSION_NUM GCC_NOT_5_2_0
 CPPFLAGS += -DGCC_NOT_5_2_0=$(GCC_NOT_5_2_0)
 export CPPFLAGS
 
-
-# the app is the main executable built by the project
+ifndef CONFIG_WIFI_SSID
 APP_ELF:=$(BUILD_DIR_BASE)/$(PROJECT_NAME).elf
+else
+VER:=$(PROJECT_VER)
+PROJECT_VER= $(VER)_$(CONFIG_WIFI_SSID)
+APP_ELF:=$(BUILD_DIR_BASE)/$(PROJECT_NAME)_$(PROJECT_VER).elf
+endif
+
+## the app is the main executable built by the project
+#ifndef CONFIG_WIFI_SSID
+#export CONFIG_WIFI_SSID:=
+#endif
+###VER merge version number and wifi_ssid
+#VER:=$(PROJECT_VER)
+#ifneq ($(CONFIG_WIFI_SSID),"")
+#PROJECT_VER= $(VER)_$(CONFIG_WIFI_SSID)
+#else
+#PROJECT_VER= $(VER)
+#endif
+#APP_ELF:=$(BUILD_DIR_BASE)/$(PROJECT_NAME)_$(PROJECT_VER).elf
+
+#APP_ELF:=$(BUILD_DIR_BASE)/$(PROJECT_NAME).elf#original
 APP_MAP:=$(APP_ELF:.elf=.map)
 APP_BIN:=$(APP_ELF:.elf=.bin)
 
@@ -709,3 +728,5 @@ endif #CONFIG_SDK_TOOLPREFIX
 #####################################################################
 endif #CONFIG_IDF_TARGET
 
+#scp:
+#	$(shell /usr/bin/scp $(BUILD_DIR_BASE)/$(PROJECT_NAME)_$(PROJECT_VER)_$(CONFIG_WIFI_SSID).bin root@iotfw.ninux.org/iotfw_https_server/fw/.)
