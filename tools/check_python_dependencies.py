@@ -52,13 +52,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     not_satisfied = []
-    with open(args.requirements) as f:
-        for line in f:
-            line = line.strip()
-            try:
-                pkg_resources.require(line)
-            except Exception:
-                not_satisfied.append(line)
+    #with open(args.requirements) as f:
+    #    for line in f:
+    #        line = line.strip()
+    #        try:
+    #            pkg_resources.require(line)
+    #        except Exception:
+    #            not_satisfied.append(line)
 
     if len(not_satisfied) > 0:
         print('The following Python requirements are not satisfied:')

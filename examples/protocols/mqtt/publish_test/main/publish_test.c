@@ -1,4 +1,5 @@
 /* MQTT publish test
+    vTaskDelay(20000 / portTICK_PERIOD_MS);
 
    This example code is in the Public Domain (or CC0 licensed, at your option.)
 
@@ -51,6 +52,25 @@ static const uint8_t iot_eclipse_org_pem_start[]  = "-----BEGIN CERTIFICATE-----
 extern const uint8_t iot_eclipse_org_pem_start[]   asm("_binary_iot_eclipse_org_pem_start");
 #endif
 extern const uint8_t iot_eclipse_org_pem_end[]   asm("_binary_iot_eclipse_org_pem_end");
+ 
+void ninux_mqtt_publish(char* topic, char* data){
+         int msg_id;
+	 char mqtt_data[512];
+ 	 char mqtt_topic[512]; 
+         bzero(mqtt_data,sizeof(mqtt_data));
+         bzero(mqtt_topic,sizeof(mqtt_topic));
+         sprintf(mqtt_data,"%s",data);
+         sprintf(mqtt_topic,"%s",topic);
+         
+         esp_mqtt_client_stop(mqtt_client);
+         xEventGroupClearBits(mqtt_event_group, CONNECTED_BIT);
+         esp_mqtt_client_start(mqtt_client);
+         //esp_mqtt_client_set_uri(mqtt_client, CONFIG_EXAMPLE_BROKER_TCP_URI);
+         ESP_LOGI(TAG, "Note free memory: %d bytes", esp_get_free_heap_size());
+         xEventGroupWaitBits(mqtt_event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
+ 
+         msg_id = esp_mqtt_client_publish(mqtt_client, mqtt_topic, mqtt_data, 0, 0, 0);
+}
 
 static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
 {
@@ -84,32 +104,8 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
         printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
         printf("DATA=%.*s\r\n", event->data_len, event->data);
         printf("ID=%d, total_len=%d, data_len=%d, current_data_offset=%d\n", event->msg_id, event->total_data_len, event->data_len, event->current_data_offset);
-        if (event->topic) {
-            actual_len = event->data_len;
-            msg_id = event->msg_id;
-        } else {
-            actual_len += event->data_len;
-            // check consisency with msg_id across multiple data events for single msg
-            if (msg_id != event->msg_id) {
-                ESP_LOGI(TAG, "Wrong msg_id in chunked message %d != %d", msg_id, event->msg_id);
-                abort();
-            }
-        }
-        memcpy(actual_data + event->current_data_offset, event->data, event->data_len);
-        if (actual_len == event->total_data_len) {
-            if (0 == memcmp(actual_data, expected_data, expected_size)) {
-                printf("OK!");
-                memset(actual_data, 0, expected_size);
-                actual_published ++;
-                if (actual_published == expected_published) {
-                    printf("Correct pattern received exactly x times\n");
-                    ESP_LOGI(TAG, "Test finished correctly!");
-                }
-            } else {
-                printf("FAILED!");
-                abort();
-            }
-        }
+        msg_id = esp_mqtt_client_publish(client,"controllo/feedback/prova", "culo", 4, 0 , 0);
+	//ninux_mqtt_publish("controllo/feedback/prova", "culo");
         break;
     case MQTT_EVENT_ERROR:
         ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -126,6 +122,7 @@ static void mqtt_app_start(void)
 {
     mqtt_event_group = xEventGroupCreate();
     const esp_mqtt_client_config_t mqtt_cfg = {
+	.uri = CONFIG_EXAMPLE_BROKER_TCP_URI,
         .event_handle = mqtt_event_handler,
         .cert_pem = (const char *)iot_eclipse_org_pem_start,
     };
@@ -150,6 +147,7 @@ static void get_string(char *line, size_t size)
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }
+
 
 void app_main()
 {
@@ -179,48 +177,29 @@ void app_main()
     ESP_ERROR_CHECK(example_connect());
 
     mqtt_app_start();
-
-    while (1) {
-        get_string(line, sizeof(line));
-        sscanf(line, "%s %s %d %d %d", transport, pattern, &repeat, &expected_published, &qos_test);
-        ESP_LOGI(TAG, "PATTERN:%s REPEATED:%d PUBLISHED:%d\n", pattern, repeat, expected_published);
-        int pattern_size = strlen(pattern);
-        free(expected_data);
-        free(actual_data);
-        actual_published = 0;
-        expected_size = pattern_size * repeat;
-        expected_data = malloc(expected_size);
-        actual_data = malloc(expected_size);
-        for (int i = 0; i < repeat; i++) {
-            memcpy(expected_data + i * pattern_size, pattern, pattern_size);
-        }
-        printf("EXPECTED STRING %.*s, SIZE:%d\n", expected_size, expected_data, expected_size);
-        esp_mqtt_client_stop(mqtt_client);
-
-        if (0 == strcmp(transport, "tcp")) {
-            ESP_LOGI(TAG, "[TCP transport] Startup..");
-            esp_mqtt_client_set_uri(mqtt_client, CONFIG_EXAMPLE_BROKER_TCP_URI);
-        } else if (0 == strcmp(transport, "ssl")) {
-            ESP_LOGI(TAG, "[SSL transport] Startup..");
-            esp_mqtt_client_set_uri(mqtt_client, CONFIG_EXAMPLE_BROKER_SSL_URI);
-        } else if (0 == strcmp(transport, "ws")) {
-            ESP_LOGI(TAG, "[WS transport] Startup..");
-            esp_mqtt_client_set_uri(mqtt_client, CONFIG_EXAMPLE_BROKER_WS_URI);
-        } else if (0 == strcmp(transport, "wss")) {
-            ESP_LOGI(TAG, "[WSS transport] Startup..");
-            esp_mqtt_client_set_uri(mqtt_client, CONFIG_EXAMPLE_BROKER_WSS_URI);
-        } else {
-            ESP_LOGE(TAG, "Unexpected transport");
-            abort();
-        }
-        xEventGroupClearBits(mqtt_event_group, CONNECTED_BIT);
+        //esp_mqtt_client_set_uri(mqtt_client, CONFIG_EXAMPLE_BROKER_TCP_URI);
+        //xEventGroupClearBits(mqtt_event_group, CONNECTED_BIT);
         esp_mqtt_client_start(mqtt_client);
-        ESP_LOGI(TAG, "Note free memory: %d bytes", esp_get_free_heap_size());
-        xEventGroupWaitBits(mqtt_event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
+        //ESP_LOGI(TAG, "Note free memory: %d bytes", esp_get_free_heap_size());
+        //xEventGroupWaitBits(mqtt_event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
 
-        for (int i = 0; i < expected_published; i++) {
-            int msg_id = esp_mqtt_client_publish(mqtt_client, CONFIG_EXAMPLE_PUBLISH_TOPIC, expected_data, expected_size, qos_test, 0);
-            ESP_LOGI(TAG, "[%d] Publishing...", msg_id);
-        }
+        //nt msg_id = esp_mqtt_client_publish(mqtt_client, "controllo/culo", "inizio", 6, 0, 0);
+
+    //vTaskDelay(20000 / portTICK_PERIOD_MS);
+    //printf("passati i 20 sec\n");
+    xEventGroupWaitBits(mqtt_event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
+    while (1) {
+
+	////ninux_mqtt_publish("controllo/culo", "culoquadro");
+        //esp_mqtt_client_stop(mqtt_client);
+        ////esp_mqtt_client_set_uri(mqtt_client, CONFIG_EXAMPLE_BROKER_TCP_URI);
+        //xEventGroupClearBits(mqtt_event_group, CONNECTED_BIT);
+        //esp_mqtt_client_start(mqtt_client);
+        //ESP_LOGI(TAG, "Note free memory: %d bytes", esp_get_free_heap_size());
+        //xEventGroupWaitBits(mqtt_event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
+        
+	int msg_id = esp_mqtt_client_publish(mqtt_client, "controllo/culo", "culoquadro", 10, 0, 0);
+	vTaskDelay(10000 / portTICK_PERIOD_MS);
     }
 }
+
