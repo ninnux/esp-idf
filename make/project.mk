@@ -444,7 +444,19 @@ export CPPFLAGS
 
 
 # the app is the main executable built by the project
+ifndef CONFIG_WIFI_SSID
+
+# the app is the main executable built by the project
 APP_ELF:=$(BUILD_DIR_BASE)/$(PROJECT_NAME).elf
+else
+VER:=$(PROJECT_VER)
+PROJECT_VER= $(VER)_$(CONFIG_WIFI_SSID)
+APP_ELF:=$(BUILD_DIR_BASE)/$(PROJECT_NAME)_$(PROJECT_VER).elf
+endif
+
+
+#APP_ELF:=$(BUILD_DIR_BASE)/$(PROJECT_NAME).elf #original
+
 APP_MAP:=$(APP_ELF:.elf=.map)
 APP_BIN:=$(APP_ELF:.elf=.bin)
 
