@@ -17,6 +17,11 @@
 #define DEFAULT_VREF    1100        //Use adc2_vref_to_gpio() to obtain a better estimate
 #define NO_OF_SAMPLES   64          //Multisampling
 
+
+#define GPIO_OUTPUT_IO_0    18
+#define GPIO_OUTPUT_IO_1    19
+#define GPIO_OUTPUT_PIN_SEL  ((1ULL<<GPIO_OUTPUT_IO_0) | (1ULL<<GPIO_OUTPUT_IO_1))
+
 static esp_adc_cal_characteristics_t *adc_chars;
 static const adc_channel_t channel = ADC_CHANNEL_6;     //GPIO34 if ADC1, GPIO14 if ADC2
 static const adc_atten_t atten = ADC_ATTEN_DB_0;
@@ -50,10 +55,25 @@ static void print_char_val_type(esp_adc_cal_value_t val_type)
     }
 }
 
+
+void gpio_init(){
+    gpio_config_t io_conf;
+    io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
+    io_conf.mode = GPIO_MODE_OUTPUT;
+    io_conf.pin_bit_mask = GPIO_OUTPUT_PIN_SEL;
+    io_conf.pull_down_en = 0;
+    io_conf.pull_up_en = 0;
+    gpio_config(&io_conf);
+
+}
+
+
+
 void app_main()
 {
     //Check if Two Point or Vref are burned into eFuse
     check_efuse();
+    gpio_init();
 
     //Configure ADC
     if (unit == ADC_UNIT_1) {
@@ -70,6 +90,7 @@ void app_main()
 
     //Continuously sample ADC1
     while (1) {
+        gpio_set_level(GPIO_OUTPUT_IO_0, 1);
         uint32_t adc_reading = 0;
         //Multisampling
         for (int i = 0; i < NO_OF_SAMPLES; i++) {
@@ -84,8 +105,10 @@ void app_main()
         adc_reading /= NO_OF_SAMPLES;
         //Convert adc_reading to voltage in mV
         uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-        printf("Raw: %d\tVoltage: %dmV\n", adc_reading, voltage);
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        printf("Raw: %d\tVoltage: %dmV = %.2fmV\n", adc_reading, voltage,(float) voltage*4.28);
+        vTaskDelay(pdMS_TO_TICKS(2000));
+        gpio_set_level(GPIO_OUTPUT_IO_0, 0);
+        vTaskDelay(pdMS_TO_TICKS(5000));
     }
 }
 
