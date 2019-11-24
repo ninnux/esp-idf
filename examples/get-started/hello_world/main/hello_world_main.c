@@ -41,10 +41,10 @@ int myarray_add_set(Tutorial__Array *array, Tutorial__Myset *set, int timestamp)
 
 int myarray_add_entry(Tutorial__Array *array, Tutorial__Myset *set, char* key, int value){
   //aggiunge un entry al set indicato aggiungendolo alle entries del set
-  printf("l array ha %d sets\n",array->n_sets);
-  printf("il set ha %d entries\n",set->n_entries);
+  //printf("l array ha %d sets\n",array->n_sets);
+  //printf("il set ha %d entries\n",set->n_entries);
   set->n_entries+=1;
-  printf("il set ha %d entries\n",set->n_entries);
+  //printf("il set ha %d entries\n",set->n_entries);
   array->sets[array->n_sets-1]->entries=realloc(set->entries,sizeof (Tutorial__Entry *)* set->n_entries);
   array->sets[array->n_sets-1]->n_entries=set->n_entries;
   array->sets[array->n_sets-1]->entries[set->n_entries-1]=malloc(sizeof(Tutorial__Entry));
@@ -52,16 +52,6 @@ int myarray_add_entry(Tutorial__Array *array, Tutorial__Myset *set, char* key, i
   array->sets[array->n_sets-1]->entries[set->n_entries-1]->key=malloc(sizeof(char)*5);
   sprintf(array->sets[array->n_sets-1]->entries[set->n_entries-1]->key,"%s",key);
   array->sets[array->n_sets-1]->entries[set->n_entries-1]->value=value;
-
-  //inserisce la entry nell'ultima posizone
-  //set->entries[set->n_entries-1]=entry;
-  //array->sets[array->n_sets-1]->entries[set->n_entries-1]=entry;
-  //array->sets[array->n_sets-1]->entries=set->entries;
-  //array->sets[array->n_sets-1]->n_entries=set->n_entries;
-  //printf("dentro key: %s\n", array->sets[array->n_sets-1]->entries[set->n_entries-1]->key);
-  
-  //printf("il set ha %d entries\n",set->n_entries);
-  //printf("ultim chiave: %s\n",array->sets[array->n_sets-1]->entries[set->n_entries-1]->key);
   return 0;
 }
 
@@ -75,6 +65,19 @@ int impacchetto(Tutorial__Array *array){
   printf("buf:%s",(char*)buf);   
   return 0;
 }
+
+int dealloco(Tutorial__Array *array){
+  int i,k;
+  for(i=0;i<array->n_sets;i++){
+	for(k=0;k<array->sets[i]->n_entries;k++){
+ 	 	free(array->sets[i]->entries[k]);
+	}
+	free(array->sets[i]->entries);
+  }
+  free(array->sets);
+  return 0;
+}
+
 
 int test4(){
   Tutorial__Array array = TUTORIAL__ARRAY__INIT;
@@ -95,21 +98,24 @@ int test4(){
 
   Tutorial__Myset *set1;
   set1= malloc (sizeof (Tutorial__Myset)); //one insert at once
-  myarray_add_set(&array,set1,1574244029);
+  myarray_add_set(&array,set1,1574244329);
   myarray_add_entry(&array,set1,"temp",19);
-//  myarray_add_entry(&array,0,"pres",1013);
-//  myarray_add_entry(&array,0,"batt",42);
-//  myarray_add_entry(&array,0,"wind",223);
-//
+  myarray_add_entry(&array,set1,"pres",1013);
+  myarray_add_entry(&array,set1,"batt",42);
+  myarray_add_entry(&array,set1,"wind",223);
 
-  //Tutorial__Myset **set1;
-  //set1 = malloc (sizeof (Tutorial__Myset *)); //one insert at once
- 
-  //myarray_add_set(&array,set1,1574244029);
-  //myarray_add_entry(&array,1,"temp",19);
-  //myarray_add_entry(&array,1,"pres",1013);
-  
+
+  Tutorial__Myset *set2;
+  set2= malloc (sizeof (Tutorial__Myset)); //one insert at once
+  myarray_add_set(&array,set2,1574244629);
+  myarray_add_entry(&array,set2,"temp",19);
+  myarray_add_entry(&array,set2,"pres",1013);
+  myarray_add_entry(&array,set2,"batt",42);
+  myarray_add_entry(&array,set2,"wind",223);
+
+
   impacchetto(&array);
+  dealloco(&array);
   return 0;
 }
 
