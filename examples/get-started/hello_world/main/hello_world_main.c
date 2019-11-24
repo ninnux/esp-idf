@@ -15,41 +15,53 @@
 #include "array.pb-c.h"
 
 
-int myarray_init(Tutorial__Array *array, Tutorial__Myset **sets){
+int myarray_init(Tutorial__Array *array){
+  //inizializza array con set vuoto
+  Tutorial__Myset **sets;
+  sets=malloc(sizeof (Tutorial__Myset *));
   array->n_sets = 0;
   array->sets=sets;
   return 0;
 }
 
-int myarray_add_set(Tutorial__Array *array, Tutorial__Myset **sets, Tutorial__Entry **entries, int timestamp){
-//int myarray_add_set(Tutorial__Array *array, int timestamp){
-  array->n_sets+=1;
-  int setindex=0;
-  setindex=array->n_sets-1;
-  sets = realloc (sets,sizeof (Tutorial__Myset *)* 1); //one insert at once
-  sets[setindex]=malloc(sizeof(Tutorial__Myset));
-  tutorial__myset__init (sets[setindex]);
-  sets[setindex]->timestamp=timestamp;
-  entries = malloc (sizeof (Tutorial__Entry *)); //one insert at once
-  sets[setindex]->n_entries=0;
-  sets[setindex]->entries=entries;
+int myarray_add_set(Tutorial__Array *array, Tutorial__Myset *set, int timestamp){
+  //aggiunge un set creato esternamente all'array nella prossima posizione libera
+  (array->n_sets)+=1;
+  printf("num set:%d\n",array->n_sets);
+  array->sets = realloc (array->sets,sizeof (Tutorial__Myset *)* array->n_sets); //one insert at once
+  array->sets[array->n_sets-1]=set;
+  tutorial__myset__init (array->sets[array->n_sets-1]);
+  array->sets[array->n_sets-1]->timestamp=timestamp;
+  array->sets[array->n_sets-1]->n_entries=0;
+  Tutorial__Entry **entries;
+  entries=malloc(sizeof (Tutorial__Entry *));
+  array->sets[array->n_sets-1]->entries=entries;
   return 0;
 }
 
-//int myarray_add_entry(Tutorial__Array *array, Tutorial__Myset **sets, Tutorial__Entry **entries, char* key, int value){
-int myarray_add_entry(Tutorial__Array *array, Tutorial__Myset **sets, char* key, int value){
-  int setindex=array->n_sets-1;
-  Tutorial__Entry **entries;
-  entries=sets[setindex]->entries;
-  int setentries=sets[setindex]->n_entries+=1;
-  printf("setentries:%d\n",setentries);
-  entries=realloc(entries,sizeof (Tutorial__Entry *)* setentries); //one insert at once
-  entries[setentries-1]=malloc(sizeof(Tutorial__Entry));
-  tutorial__entry__init (entries[setentries-1]);
-  entries[setentries-1]->key=malloc(sizeof(char)*5);
-  sprintf(entries[setentries-1]->key,"%s",key);
-  entries[setentries-1]->value=value;
-  sets[setindex]->entries=entries;
+int myarray_add_entry(Tutorial__Array *array, Tutorial__Myset *set, char* key, int value){
+  //aggiunge un entry al set indicato aggiungendolo alle entries del set
+  printf("l array ha %d sets\n",array->n_sets);
+  printf("il set ha %d entries\n",set->n_entries);
+  set->n_entries+=1;
+  printf("il set ha %d entries\n",set->n_entries);
+  array->sets[array->n_sets-1]->entries=realloc(set->entries,sizeof (Tutorial__Entry *)* set->n_entries);
+  array->sets[array->n_sets-1]->n_entries=set->n_entries;
+  array->sets[array->n_sets-1]->entries[set->n_entries-1]=malloc(sizeof(Tutorial__Entry));
+  tutorial__entry__init (array->sets[array->n_sets-1]->entries[set->n_entries-1]);
+  array->sets[array->n_sets-1]->entries[set->n_entries-1]->key=malloc(sizeof(char)*5);
+  sprintf(array->sets[array->n_sets-1]->entries[set->n_entries-1]->key,"%s",key);
+  array->sets[array->n_sets-1]->entries[set->n_entries-1]->value=value;
+
+  //inserisce la entry nell'ultima posizone
+  //set->entries[set->n_entries-1]=entry;
+  //array->sets[array->n_sets-1]->entries[set->n_entries-1]=entry;
+  //array->sets[array->n_sets-1]->entries=set->entries;
+  //array->sets[array->n_sets-1]->n_entries=set->n_entries;
+  //printf("dentro key: %s\n", array->sets[array->n_sets-1]->entries[set->n_entries-1]->key);
+  
+  //printf("il set ha %d entries\n",set->n_entries);
+  //printf("ultim chiave: %s\n",array->sets[array->n_sets-1]->entries[set->n_entries-1]->key);
   return 0;
 }
 
@@ -66,25 +78,38 @@ int impacchetto(Tutorial__Array *array){
 
 int test4(){
   Tutorial__Array array = TUTORIAL__ARRAY__INIT;
-  Tutorial__Myset **sets;
-  Tutorial__Entry **entries;
-  sets = malloc (sizeof (Tutorial__Myset *)); //one insert at once
-  myarray_init(&array,sets);
-  entries = malloc (sizeof (Tutorial__Entry *));
-  myarray_add_set(&array,(Tutorial__Myset**)sets,entries,1574244029);
-  //myarray_add_entry(&array,sets, entries, "temp",19);
-  myarray_add_entry(&array,sets,"temp",19);
-  myarray_add_entry(&array,sets,"pres",1013);
-  myarray_add_entry(&array,sets,"batt",42);
-  myarray_add_entry(&array,sets,"wind",223);
+  myarray_init(&array);
+
+
+  Tutorial__Myset *set0;
+  set0= malloc (sizeof (Tutorial__Myset)); //one insert at once
+ 
+  myarray_add_set(&array,set0,1574244029);
+  myarray_add_entry(&array,set0,"temp",19);
+  myarray_add_entry(&array,set0,"pres",1013);
+  myarray_add_entry(&array,set0,"batt",42);
+  myarray_add_entry(&array,set0,"wind",223);
+
+  printf("key: %s\n", set0->entries[set0->n_entries-1]->key);
+  printf("key: %s\n", array.sets[array.n_sets-1]->entries[set0->n_entries-1]->key);
+
+  Tutorial__Myset *set1;
+  set1= malloc (sizeof (Tutorial__Myset)); //one insert at once
+  myarray_add_set(&array,set1,1574244029);
+  myarray_add_entry(&array,set1,"temp",19);
+//  myarray_add_entry(&array,0,"pres",1013);
+//  myarray_add_entry(&array,0,"batt",42);
+//  myarray_add_entry(&array,0,"wind",223);
+//
+
+  //Tutorial__Myset **set1;
+  //set1 = malloc (sizeof (Tutorial__Myset *)); //one insert at once
+ 
+  //myarray_add_set(&array,set1,1574244029);
+  //myarray_add_entry(&array,1,"temp",19);
+  //myarray_add_entry(&array,1,"pres",1013);
+  
   impacchetto(&array);
-  //int len=0;
-  //uint8_t* buf;
-  //len = tutorial__array__get_packed_size (&array); // This is the calculated packing length
-  //printf("Writing %d serialized bytes\n",len); // See the length of message
-  //buf = malloc (len);                     // Allocate memory
-  //tutorial__array__pack (&array, buf);             // Pack msg, including submessages
-  //printf("buf:%s",(char*)buf);   
   return 0;
 }
 
