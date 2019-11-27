@@ -57,13 +57,13 @@ int test4(){
   printf("lunghezza buf:%d\n",strlen((char*)buffer));
 
   Ninux__Sensordata *sensordata2;
-  sensordata2 = ninux__sensordata__unpack(NULL,strlen(buffer),(uint8_t*) buffer);
+  //sensordata2 = ninux__sensordata__unpack(NULL,strlen(buffer),(uint8_t*) buffer);
 
   //printf("n_sets:%d\n",sensordata2->n_sets);
  // sensordata_print_all(sensordata2);
 
-  //Ninux__Sensordata *psensordata2 = &sensordata2;
-  //sensordata_deserialize(&psensordata2,(unsigned char*) buffer);
+  Ninux__Sensordata *psensordata2 = &sensordata2;
+  sensordata_deserialize(psensordata2,(unsigned char*) buffer);
   //sensordata_print_all(&sensordata2);
   Ninux__Myset *set3;
   set3= malloc (sizeof (Ninux__Myset)); //one insert at once
