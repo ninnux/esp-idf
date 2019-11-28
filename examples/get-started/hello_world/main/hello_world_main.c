@@ -16,6 +16,8 @@
 #include "ninux_sensordata_pb.h"
 
 
+uint8_t buffer[1024];
+
 int insert_values(unsigned char** buffer){
 
   /// inserimento singolo a rotazione
@@ -50,7 +52,7 @@ int insert_values2(unsigned char** buffer, int timestamp, char** keys,int* value
   	sensordata_add_entry(sensordata2,set3,keys[i],values[i]);
   }
   sensordata_print_all(sensordata2);
-  sensordata_serialize(sensordata2,(uint8_t**) buffer);
+  sensordata_serialize2(sensordata2,(uint8_t**) *buffer);
   printf("mio buffer: %s\n",*buffer);
   printf("lunghezza buf:%d\n",strlen((char*)*buffer));
   /////////////
@@ -61,7 +63,7 @@ int test4(){
   // inizializzazione
   Ninux__Sensordata sensordata = NINUX__SENSORDATA__INIT;
   sensordata_init(&sensordata);
-  char* buffer;
+  //char* buffer;
   sensordata_serialize(&sensordata,(uint8_t**) &buffer);
   ///////
 

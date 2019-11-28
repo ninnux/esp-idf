@@ -1,0 +1,18 @@
+syntax = "proto2";
+
+package ninux;
+
+message entry {
+  required string key = 1;
+  required int32 value = 2;
+}
+
+message myset {
+  required int32 timestamp = 1;
+  repeated entry entries = 2;
+}
+
+message sensordata {
+  repeated myset sets = 1;
+}
+
