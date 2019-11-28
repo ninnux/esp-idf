@@ -15,6 +15,29 @@
 
 #include "ninux_sensordata_pb.h"
 
+
+int insert_values(unsigned char** buffer){
+
+  /// inserimento singolo a rotazione
+  Ninux__Sensordata *sensordata2;
+  Ninux__Sensordata *psensordata2 = &sensordata2;
+  sensordata_deserialize(psensordata2,(unsigned char*) *buffer);
+  Ninux__Myset *set3;
+  set3= malloc (sizeof (Ninux__Myset)); //one insert at once
+  sensordata_add_set(sensordata2,set3,555555);
+  sensordata_add_entry(sensordata2,set3,"temp",55);
+  sensordata_add_entry(sensordata2,set3,"pres",5555);
+  sensordata_print_all(sensordata2);
+  sensordata_serialize(sensordata2,(uint8_t**) buffer);
+  printf("mio buffer: %s\n",*buffer);
+  printf("lunghezza buf:%d\n",strlen((char*)*buffer));
+  /////////////
+  return 0;
+}
+
+
+
+
 int test4(){
 
   // inizializzazione
@@ -27,21 +50,24 @@ int test4(){
 
   //printf("mio buffer: %s\n",buffer);
   //printf("lunghezza buf:%d\n",strlen((char*)buffer));
-
-  /// inserimento singolo a rotazione
-  Ninux__Sensordata *sensordata2;
-  Ninux__Sensordata *psensordata2 = &sensordata2;
-  sensordata_deserialize(psensordata2,(unsigned char*) buffer);
-  Ninux__Myset *set3;
-  set3= malloc (sizeof (Ninux__Myset)); //one insert at once
-  sensordata_add_set(sensordata2,set3,555555);
-  sensordata_add_entry(sensordata2,set3,"temp",55);
-  sensordata_add_entry(sensordata2,set3,"pres",5555);
-  sensordata_print_all(sensordata2);
-  sensordata_serialize(sensordata2,(uint8_t**) &buffer);
-  printf("mio buffer: %s\n",buffer);
-  printf("lunghezza buf:%d\n",strlen((char*)buffer));
-  /////////////
+  int q=0;
+  for(q=0;q<10;q++){
+  	insert_values(&buffer);
+  }
+  ///// inserimento singolo a rotazione
+  //Ninux__Sensordata *sensordata2;
+  //Ninux__Sensordata *psensordata2 = &sensordata2;
+  //sensordata_deserialize(psensordata2,(unsigned char*) buffer);
+  //Ninux__Myset *set3;
+  //set3= malloc (sizeof (Ninux__Myset)); //one insert at once
+  //sensordata_add_set(sensordata2,set3,555555);
+  //sensordata_add_entry(sensordata2,set3,"temp",55);
+  //sensordata_add_entry(sensordata2,set3,"pres",5555);
+  //sensordata_print_all(sensordata2);
+  //sensordata_serialize(sensordata2,(uint8_t**) &buffer);
+  //printf("mio buffer: %s\n",buffer);
+  //printf("lunghezza buf:%d\n",strlen((char*)buffer));
+  ///////////////
 
   /// inserimento singolo a rotazione
   Ninux__Sensordata *sensordata3;
