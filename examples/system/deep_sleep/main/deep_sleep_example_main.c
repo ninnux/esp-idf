@@ -28,6 +28,40 @@ static RTC_DATA_ATTR struct timeval sleep_enter_time;
 RTC_DATA_ATTR int counter=0;
 
 
+#include "ninux_sensordata_pb.h"
+
+RTC_DATA_ATTR char rtc_buffer[1024];
+RTC_DATA_ATTR int rtc_buffer_len=0;
+
+int test4(){
+
+  sensordata_init2(&rtc_buffer,&rtc_buffer_len);
+
+  //insert_values(&buffer);
+  char* keys[]={"temp","hum","wind","pres"}; 
+  int values[]={22,78,23,1013};
+  sensordata_insert_values2(&rtc_buffer,12334234,keys,values,4,&rtc_buffer_len);
+  sensordata_print_all2(&rtc_buffer,&rtc_buffer_len);
+
+  //keys[0]="temp";
+  //values[0]=33;
+  printf("fine primo inserimento\n");
+  printf("%s\n",rtc_buffer);
+
+  char* keys2[]={"temp","hum","wind","pres"}; 
+  int values2[]={25,80,35,999};
+  sensordata_insert_values2(&rtc_buffer,4444444,keys2,values2,4,&rtc_buffer_len);
+
+  char* keys3[]={"temp","hum","wind","pres"}; 
+  int values3[]={250,800,350,9999};
+  sensordata_insert_values2(&rtc_buffer,5555555,keys3,values3,4,&rtc_buffer_len);
+
+  
+  sensordata_print_all2(&rtc_buffer,&rtc_buffer_len);
+  //sensordata_free(&sensordata);
+  //sensordata_free(&sensordata2);
+  return 0;
+}
 
 void app_main()
 {
@@ -48,17 +82,36 @@ void app_main()
         }
         case ESP_SLEEP_WAKEUP_TIMER: {
             printf("Wake up from timer. Time spent in deep sleep: %dms\n", sleep_time_ms);
+  	    char* keys4[]={"temp","batt"}; 
+  	    int values4[]={250,42};
+  	    sensordata_insert_values2(&rtc_buffer,counter*1111111,keys4,values4,2,&rtc_buffer_len);
+	    if(counter%2==0){
+  	    	char* keys4[]={"wind","dire"}; 
+  	    	int values4[]={50,180};
+  	    	sensordata_insert_values2(&rtc_buffer,counter*1111111,keys4,values4,2,&rtc_buffer_len);
+	    }
+	    if(counter==5){
+  	    	bzero(rtc_buffer,rtc_buffer_len);
+                rtc_buffer_len=0;
+	    }
+
+
+  	    sensordata_print_all2(&rtc_buffer,&rtc_buffer_len);
             break;
         }
         case ESP_SLEEP_WAKEUP_UNDEFINED:
-        default:
+        default:{
             printf("Not a deep sleep reset\n");
+	   // test4();
+  	    sensordata_init2(&rtc_buffer,&rtc_buffer_len);
+        }
+
     }
 
 
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 
-    const int wakeup_time_sec = 300;
+    const int wakeup_time_sec = 10;
     printf("Enabling timer wakeup, %ds\n", wakeup_time_sec);
     esp_sleep_enable_timer_wakeup(wakeup_time_sec * 1000000);
 
@@ -83,7 +136,6 @@ void app_main()
     rtc_gpio_pullup_en(GPIO_NUM_27);
     rtc_gpio_pulldown_dis(GPIO_NUM_27);
     //rtc_gpio_hold_en(GPIO_NUM_5);
-
     printf("Entering deep sleep\n");
     gettimeofday(&sleep_enter_time, NULL);
 
