@@ -20,19 +20,13 @@ int rtc_buffer_len=0;
 
 int test4(){
 
-  // inizializzazione
-  Ninux__Sensordata sensordata = NINUX__SENSORDATA__INIT;
-  sensordata_init(&sensordata);
-  //char* buffer;
-  sensordata_serialize2_size(&sensordata,(uint8_t**) rtc_buffer,&rtc_buffer_len);
-  ///////
-
-
+  sensordata_init2(&rtc_buffer,&rtc_buffer_len);
 
   //insert_values(&buffer);
   char* keys[]={"temp","hum","wind","pres"}; 
   int values[]={22,78,23,1013};
   sensordata_insert_values2(&rtc_buffer,12334234,keys,values,4,&rtc_buffer_len);
+  sensordata_print_all2(&rtc_buffer,&rtc_buffer_len);
 
   //keys[0]="temp";
   //values[0]=33;
@@ -51,7 +45,7 @@ int test4(){
   int values4[]={250,42};
   sensordata_insert_values2(&rtc_buffer,666666,keys4,values4,2,&rtc_buffer_len);
   
-
+  sensordata_print_all2(&rtc_buffer,&rtc_buffer_len);
   //sensordata_free(&sensordata);
   //sensordata_free(&sensordata2);
   return 0;
@@ -61,9 +55,6 @@ int test4(){
 void app_main()
 {
     printf("Hello world!\n");
-
-    //char* message;
-    //message=malloc(sizeof(char)*70); 
 
     test4();
 
