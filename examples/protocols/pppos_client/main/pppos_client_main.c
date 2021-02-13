@@ -16,7 +16,7 @@
 #include "sim800.h"
 #include "bg96.h"
 
-#define BROKER_URL "mqtt://iot.eclipse.org"
+#define BROKER_URL "mqtt://loraserver_ns:loraserver_ns@lora.ninux.org"
 
 static const char *TAG = "pppos_example";
 static EventGroupHandle_t event_group = NULL;
@@ -146,6 +146,7 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
     switch (event->event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
+        msg_id = esp_mqtt_client_publish(client, "ambiente/gprs/esp-pppos", "ciao", 0, 0, 0);
         msg_id = esp_mqtt_client_subscribe(client, "/topic/esp-pppos", 0);
         ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
         break;
@@ -179,8 +180,34 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
     return ESP_OK;
 }
 
+
+#define MODEM_PWKEY 4
+
+#define MODEM_RST 5
+
+#define MODEM_POWER_ON 23
+
+
+void sim800_turnon()
+{
+
+
+gpio_set_direction(MODEM_PWKEY, GPIO_MODE_OUTPUT);
+gpio_set_direction(MODEM_RST, GPIO_MODE_OUTPUT);
+gpio_set_direction(MODEM_POWER_ON, GPIO_MODE_OUTPUT);
+
+gpio_set_level(MODEM_PWKEY, 0);
+gpio_set_level(MODEM_RST, 1);
+gpio_set_level(MODEM_POWER_ON, 1);
+vTaskDelay(1500/portTICK_RATE_MS);
+gpio_set_level(MODEM_PWKEY, 1);
+vTaskDelay(15000/portTICK_RATE_MS);
+
+}
+
 void app_main()
 {
+    sim800_turnon();
     tcpip_adapter_init();
     event_group = xEventGroupCreate();
     /* create dte object */
