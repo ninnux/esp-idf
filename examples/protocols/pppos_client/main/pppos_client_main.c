@@ -16,6 +16,17 @@
 #include "sim800.h"
 #include "bg96.h"
 
+
+#include "esp_sleep.h"
+#include "esp32/ulp.h"
+#include "driver/touch_pad.h"
+#include "driver/adc.h"
+#include "driver/rtc_io.h"
+#include "soc/rtc_cntl_reg.h"
+#include "soc/sens_reg.h"
+#include "soc/rtc.h"
+
+static RTC_DATA_ATTR struct timeval sleep_enter_time;
 #define BROKER_URL "mqtt://loraserver_ns:loraserver_ns@lora.ninux.org"
 
 static const char *TAG = "pppos_example";
@@ -205,6 +216,72 @@ vTaskDelay(15000/portTICK_RATE_MS);
 
 }
 
+void sim800_turnoff()
+{ 
+        gpio_set_direction(MODEM_PWKEY, GPIO_MODE_OUTPUT); 
+        gpio_set_direction(MODEM_RST, GPIO_MODE_OUTPUT); 
+        gpio_set_direction(MODEM_POWER_ON, GPIO_MODE_OUTPUT); 
+ 
+        gpio_set_level(MODEM_PWKEY, 1); 
+        gpio_set_level(MODEM_RST, 0); 
+        gpio_set_level(MODEM_POWER_ON, 0); 
+        vTaskDelay(1500/portTICK_RATE_MS); 
+        gpio_set_level(MODEM_PWKEY, 1); 
+        vTaskDelay(15000/portTICK_RATE_MS); 
+
+}
+
+void sleeppa(int sec)
+{
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    int sleep_time_ms = (now.tv_sec - sleep_enter_time.tv_sec) * 1000 + (now.tv_usec - sleep_enter_time.tv_usec) / 1000;
+
+    switch (esp_sleep_get_wakeup_cause()) {
+        case ESP_SLEEP_WAKEUP_EXT1: {
+            uint64_t wakeup_pin_mask = esp_sleep_get_ext1_wakeup_status();
+            if (wakeup_pin_mask != 0) {
+                int pin = __builtin_ffsll(wakeup_pin_mask) - 1;
+                printf("Wake up from GPIO %d\n", pin);
+            } else {
+                printf("Wake up from GPIO\n");
+            }
+            break;
+        }
+        case ESP_SLEEP_WAKEUP_TIMER: {
+            printf("Wake up from timer. Time spent in deep sleep: %dms\n", sleep_time_ms);
+            break;
+        }
+        case ESP_SLEEP_WAKEUP_UNDEFINED:
+        default:
+            printf("Not a deep sleep reset\n");
+    }
+
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+    const int wakeup_time_sec = sec;
+    printf("Enabling timer wakeup, %ds\n", wakeup_time_sec);
+    esp_sleep_enable_timer_wakeup(wakeup_time_sec * 1000000);
+
+    const int ext_wakeup_pin_1 = 25;
+    const uint64_t ext_wakeup_pin_1_mask = 1ULL << ext_wakeup_pin_1;
+    const int ext_wakeup_pin_2 = 26;
+    const uint64_t ext_wakeup_pin_2_mask = 1ULL << ext_wakeup_pin_2;
+
+    printf("Enabling EXT1 wakeup on pins GPIO%d, GPIO%d\n", ext_wakeup_pin_1, ext_wakeup_pin_2);
+    esp_sleep_enable_ext1_wakeup(ext_wakeup_pin_1_mask | ext_wakeup_pin_2_mask, ESP_EXT1_WAKEUP_ANY_HIGH);
+
+    // Isolate GPIO12 pin from external circuits. This is needed for modules
+    // which have an external pull-up resistor on GPIO12 (such as ESP32-WROVER)
+    // to minimize current consumption.
+    rtc_gpio_isolate(GPIO_NUM_12);
+
+    printf("Entering deep sleep\n");
+    gettimeofday(&sleep_enter_time, NULL);
+
+    esp_deep_sleep_start();
+}
+
 void app_main()
 {
     sim800_turnon();
@@ -264,4 +341,7 @@ void app_main()
     ESP_LOGI(TAG, "Power down");
     ESP_ERROR_CHECK(dce->deinit(dce));
     ESP_ERROR_CHECK(dte->deinit(dte));
+
+    sim800_turnoff();
+    sleeppa(300);
 }
