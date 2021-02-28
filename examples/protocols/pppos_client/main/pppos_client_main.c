@@ -222,12 +222,13 @@ void sim800_turnoff()
         gpio_set_direction(MODEM_RST, GPIO_MODE_OUTPUT); 
         gpio_set_direction(MODEM_POWER_ON, GPIO_MODE_OUTPUT); 
  
-        gpio_set_level(MODEM_PWKEY, 1); 
-        gpio_set_level(MODEM_RST, 0); 
+        gpio_set_level(MODEM_PWKEY, 0);
+	vTaskDelay(1500/portTICK_RATE_MS);
+        //gpio_set_level(MODEM_RST, 0); 
         gpio_set_level(MODEM_POWER_ON, 0); 
-        vTaskDelay(1500/portTICK_RATE_MS); 
-        gpio_set_level(MODEM_PWKEY, 1); 
-        vTaskDelay(15000/portTICK_RATE_MS); 
+        //vTaskDelay(1500/portTICK_RATE_MS); 
+        //gpio_set_level(MODEM_PWKEY, 1); 
+        //vTaskDelay(15000/portTICK_RATE_MS); 
 
 }
 
@@ -341,7 +342,7 @@ void app_main()
     ESP_LOGI(TAG, "Power down");
     ESP_ERROR_CHECK(dce->deinit(dce));
     ESP_ERROR_CHECK(dte->deinit(dte));
-
     sim800_turnoff();
+    gpio_deep_sleep_hold_en();
     sleeppa(300);
 }
