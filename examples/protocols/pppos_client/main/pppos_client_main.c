@@ -285,8 +285,8 @@ void sleeppa(int sec)
 
 void app_main()
 {
-    sim800_turnon();
     tcpip_adapter_init();
+    sim800_turnon();
     event_group = xEventGroupCreate();
     /* create dte object */
     esp_modem_dte_config_t config = ESP_MODEM_DTE_DEFAULT_CONFIG();
