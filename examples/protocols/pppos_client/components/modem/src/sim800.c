@@ -222,6 +222,7 @@ static esp_err_t sim800_handle_cops(modem_dce_t *dce, const char *line)
 static esp_err_t sim800_handle_power_down(modem_dce_t *dce, const char *line)
 {
     esp_err_t err = ESP_FAIL;
+    printf("powerdown result line:%s\n",line);
     if (strstr(line, MODEM_RESULT_CODE_POWERDOWN)) {
         err = esp_modem_process_command_done(dce, MODEM_STATE_SUCCESS);
     }
@@ -328,9 +329,12 @@ static esp_err_t sim800_power_down(modem_dce_t *dce)
 {
     modem_dte_t *dte = dce->dte;
     dce->handle_line = sim800_handle_power_down;
+    printf("mando il comando di power_down\n");
     DCE_CHECK(dte->send_cmd(dte, "AT+CPOWD=1\r", MODEM_COMMAND_TIMEOUT_POWEROFF) == ESP_OK, "send command failed", err);
     DCE_CHECK(dce->state == MODEM_STATE_SUCCESS, "power down failed", err);
+    printf("risposta power_down: %d\n",dce->state);
     ESP_LOGD(DCE_TAG, "power down ok");
+    printf("PIPPO\n");
     return ESP_OK;
 err:
     return ESP_FAIL;

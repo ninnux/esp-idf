@@ -35,6 +35,52 @@ static const int CONNECT_BIT = BIT0;
 static const int STOP_BIT = BIT1;
 static const int GOT_DATA_BIT = BIT2;
 
+#include <driver/i2c.h>
+unsigned int CONFIG_IP5306_I2C_FREQ_HZ = 100000;
+unsigned int CONFIG_IP5306_I2C_PORT = 1;
+unsigned int CONFIG_IP5306_I2C_SDA_GPIO = 21;
+unsigned int CONFIG_IP5306_I2C_SCL_GPIO = 22;
+unsigned int CONFIG_IP5306_I2C_ADDR = 0x75;
+unsigned int IP5306_REG_SYS_CTL0 =  0x00;
+
+// setPowerBoostKeepOn
+esp_err_t setPowerBoostKeepOn(bool boost){
+
+	// Set bit1: Boost Keep On: 1 - enable, 0 - disable(default)
+	const uint8_t code = (boost)?0x37:0x35;
+
+	//i2c_config_t conf = {
+	//	I2C_MODE_MASTER,
+	//	CONFIG_IP5306_I2C_SDA_GPIO,
+	//	CONFIG_IP5306_I2C_SCL_GPIO,
+	//	GPIO_PULLUP_ENABLE,
+	//	GPIO_PULLUP_ENABLE,
+	//	CONFIG_IP5306_I2C_FREQ_HZ
+
+	//};
+        i2c_config_t conf;
+        conf.mode = I2C_MODE_MASTER;
+        conf.sda_io_num = CONFIG_IP5306_I2C_SDA_GPIO;
+        conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
+        conf.scl_io_num = CONFIG_IP5306_I2C_SCL_GPIO;
+        conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
+        conf.master.clk_speed = CONFIG_IP5306_I2C_FREQ_HZ;
+
+	i2c_param_config(CONFIG_IP5306_I2C_PORT, &conf);
+	i2c_driver_install(CONFIG_IP5306_I2C_PORT, conf.mode, 0, 0, 0);
+
+
+	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+	esp_err_t ret = ESP_FAIL;
+	i2c_master_start(cmd);
+	i2c_master_write_byte(cmd, (CONFIG_IP5306_I2C_ADDR << 1) | I2C_MASTER_WRITE, 1);
+	i2c_master_write_byte(cmd, IP5306_REG_SYS_CTL0, 1);
+	i2c_master_write_byte(cmd, code, 1);
+	i2c_master_stop(cmd);
+	ret = i2c_master_cmd_begin(CONFIG_IP5306_I2C_PORT, cmd, 1000 / portTICK_RATE_MS);
+	i2c_cmd_link_delete(cmd);
+	return ret;
+}
 #if CONFIG_SEND_MSG
 /**
  * @brief This example will also show how to send short message using the infrastructure provided by esp modem library.
@@ -206,30 +252,37 @@ void sim800_turnon()
 gpio_set_direction(MODEM_PWKEY, GPIO_MODE_OUTPUT);
 gpio_set_direction(MODEM_RST, GPIO_MODE_OUTPUT);
 gpio_set_direction(MODEM_POWER_ON, GPIO_MODE_OUTPUT);
+gpio_set_level(MODEM_POWER_ON, 1);
+gpio_set_level(MODEM_RST, 1);
+
+
+gpio_set_level(MODEM_PWKEY, 1);
+vTaskDelay(100/portTICK_RATE_MS);
 
 gpio_set_level(MODEM_PWKEY, 0);
-gpio_set_level(MODEM_RST, 1);
-gpio_set_level(MODEM_POWER_ON, 1);
-vTaskDelay(1500/portTICK_RATE_MS);
+vTaskDelay(1000/portTICK_RATE_MS);
+
 gpio_set_level(MODEM_PWKEY, 1);
 vTaskDelay(15000/portTICK_RATE_MS);
 
+//gpio_set_level(MODEM_RST, 0);
 }
 
 void sim800_turnoff()
 { 
-        gpio_set_direction(MODEM_PWKEY, GPIO_MODE_OUTPUT); 
-        gpio_set_direction(MODEM_RST, GPIO_MODE_OUTPUT); 
-        gpio_set_direction(MODEM_POWER_ON, GPIO_MODE_OUTPUT); 
+        //gpio_set_direction(MODEM_PWKEY, GPIO_MODE_OUTPUT); 
+        //gpio_set_direction(MODEM_RST, GPIO_MODE_OUTPUT); 
+        //gpio_set_direction(MODEM_POWER_ON, GPIO_MODE_OUTPUT); 
  
-        gpio_set_level(MODEM_PWKEY, 0);
-	vTaskDelay(1500/portTICK_RATE_MS);
+        //gpio_set_level(MODEM_PWKEY, 0);
+	//vTaskDelay(1500/portTICK_RATE_MS);
         //gpio_set_level(MODEM_RST, 0); 
-        gpio_set_level(MODEM_POWER_ON, 0); 
+        //gpio_set_level(MODEM_POWER_ON, 0); 
         //vTaskDelay(1500/portTICK_RATE_MS); 
         //gpio_set_level(MODEM_PWKEY, 1); 
         //vTaskDelay(15000/portTICK_RATE_MS); 
 
+        gpio_set_level(MODEM_RST, 0); 
 }
 
 void sleeppa(int sec)
@@ -264,18 +317,18 @@ void sleeppa(int sec)
     printf("Enabling timer wakeup, %ds\n", wakeup_time_sec);
     esp_sleep_enable_timer_wakeup(wakeup_time_sec * 1000000);
 
-    const int ext_wakeup_pin_1 = 25;
-    const uint64_t ext_wakeup_pin_1_mask = 1ULL << ext_wakeup_pin_1;
-    const int ext_wakeup_pin_2 = 26;
-    const uint64_t ext_wakeup_pin_2_mask = 1ULL << ext_wakeup_pin_2;
+    //const int ext_wakeup_pin_1 = 25;
+    //const uint64_t ext_wakeup_pin_1_mask = 1ULL << ext_wakeup_pin_1;
+    //const int ext_wakeup_pin_2 = 26;
+    //const uint64_t ext_wakeup_pin_2_mask = 1ULL << ext_wakeup_pin_2;
 
-    printf("Enabling EXT1 wakeup on pins GPIO%d, GPIO%d\n", ext_wakeup_pin_1, ext_wakeup_pin_2);
-    esp_sleep_enable_ext1_wakeup(ext_wakeup_pin_1_mask | ext_wakeup_pin_2_mask, ESP_EXT1_WAKEUP_ANY_HIGH);
+    //printf("Enabling EXT1 wakeup on pins GPIO%d, GPIO%d\n", ext_wakeup_pin_1, ext_wakeup_pin_2);
+    //esp_sleep_enable_ext1_wakeup(ext_wakeup_pin_1_mask | ext_wakeup_pin_2_mask, ESP_EXT1_WAKEUP_ANY_HIGH);
 
     // Isolate GPIO12 pin from external circuits. This is needed for modules
     // which have an external pull-up resistor on GPIO12 (such as ESP32-WROVER)
     // to minimize current consumption.
-    rtc_gpio_isolate(GPIO_NUM_12);
+    //rtc_gpio_isolate(GPIO_NUM_12);
 
     printf("Entering deep sleep\n");
     gettimeofday(&sleep_enter_time, NULL);
@@ -287,6 +340,7 @@ void app_main()
 {
     tcpip_adapter_init();
     sim800_turnon();
+    setPowerBoostKeepOn(true);
     event_group = xEventGroupCreate();
     /* create dte object */
     esp_modem_dte_config_t config = ESP_MODEM_DTE_DEFAULT_CONFIG();
@@ -342,7 +396,7 @@ void app_main()
     ESP_LOGI(TAG, "Power down");
     ESP_ERROR_CHECK(dce->deinit(dce));
     ESP_ERROR_CHECK(dte->deinit(dte));
-    sim800_turnoff();
-    gpio_deep_sleep_hold_en();
+    //sim800_turnoff();
+    //gpio_deep_sleep_hold_en();
     sleeppa(300);
 }
